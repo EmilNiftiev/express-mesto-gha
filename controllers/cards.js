@@ -25,7 +25,13 @@ const createCard = (req, res) => {
           stack: err.stack,
         });
       } else {
-        res.status(STATUS_CODES.SERVER_ERROR).send({ message: 'Ошибка сервера' });
+        res
+          .status(STATUS_CODES.SERVER_ERROR)
+          .send({
+            message: 'Ошибка сервера',
+            err: err.message,
+            stack: err.stack,
+          });
       }
     });
 };
@@ -36,11 +42,8 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   )
+    .orFail(new Error('NotValidCardId')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((card) => {
-      if (!card) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка не найдена' });
-        return;
-      }
       res.status(STATUS_CODES.OK).send({ data: card });
     })
     .catch((err) => {
@@ -50,8 +53,22 @@ const likeCard = (req, res) => {
           err: err.message,
           stack: err.stack,
         });
+      } else if (err.message === 'NotValidCardId') {
+        res
+          .status(STATUS_CODES.NOT_FOUND)
+          .send({
+            message: 'Карточка не найдена',
+            err: err.message,
+            stack: err.stack,
+          });
       } else {
-        res.status(STATUS_CODES.SERVER_ERROR).send({ message: 'Ошибка сервера' });
+        res
+          .status(STATUS_CODES.SERVER_ERROR)
+          .send({
+            message: 'Ошибка сервера',
+            err: err.message,
+            stack: err.stack,
+          });
       }
     });
 };
@@ -62,11 +79,8 @@ const dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   )
+    .orFail(new Error('NotValidCardId')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((card) => {
-      if (!card) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка не найдена' });
-        return;
-      }
       res.status(STATUS_CODES.OK).send({ data: card });
     })
     .catch((err) => {
@@ -76,19 +90,30 @@ const dislikeCard = (req, res) => {
           err: err.message,
           stack: err.stack,
         });
+      } else if (err.message === 'NotValidCardId') {
+        res
+          .status(STATUS_CODES.NOT_FOUND)
+          .send({
+            message: 'Карточка не найдена',
+            err: err.message,
+            stack: err.stack,
+          });
       } else {
-        res.status(STATUS_CODES.SERVER_ERROR).send({ message: 'Ошибка сервера' });
+        res
+          .status(STATUS_CODES.SERVER_ERROR)
+          .send({
+            message: 'Ошибка сервера',
+            err: err.message,
+            stack: err.stack,
+          });
       }
     });
 };
 
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
+    .orFail(new Error('NotValidCardId')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((card) => {
-      if (!card) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка не найдена' });
-        return;
-      }
       res.status(STATUS_CODES.OK).send({ data: card });
     })
     .catch((err) => {
@@ -98,8 +123,22 @@ const deleteCard = (req, res) => {
           err: err.message,
           stack: err.stack,
         });
+      } else if (err.message === 'NotValidCardId') {
+        res
+          .status(STATUS_CODES.NOT_FOUND)
+          .send({
+            message: 'Карточка не найдена',
+            err: err.message,
+            stack: err.stack,
+          });
       } else {
-        res.status(STATUS_CODES.SERVER_ERROR).send({ message: 'Ошибка сервера' });
+        res
+          .status(STATUS_CODES.SERVER_ERROR)
+          .send({
+            message: 'Ошибка сервера',
+            err: err.message,
+            stack: err.stack,
+          });
       }
     });
 };

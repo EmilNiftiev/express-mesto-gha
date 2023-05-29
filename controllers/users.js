@@ -61,7 +61,11 @@ const getUserById = (req, res) => {
       } else {
         res
           .status(STATUS_CODES.SERVER_ERROR)
-          .send({ message: 'Ошибка сервера' });
+          .send({
+            message: 'Ошибка сервера',
+            err: err.message,
+            stack: err.stack,
+          });
       }
     });
 };
@@ -94,7 +98,11 @@ const updateUserAvatar = (req, res) => {
       } else {
         res
           .status(STATUS_CODES.SERVER_ERROR)
-          .send({ message: 'Ошибка сервера' });
+          .send({
+            message: 'Ошибка сервера',
+            err: err.message,
+            stack: err.stack,
+          });
       }
     });
 };
@@ -127,7 +135,11 @@ const updateUserProfile = (req, res) => {
       } else {
         res
           .status(STATUS_CODES.SERVER_ERROR)
-          .send({ message: 'Ошибка сервера' });
+          .send({
+            message: 'Ошибка сервера',
+            err: err.message,
+            stack: err.stack,
+          });
       }
     });
 };
