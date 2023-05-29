@@ -37,14 +37,9 @@ const createUser = (req, res) => {
 
 const getUserById = (req, res) => {
   User.findById(req.params.userId)
+    .orFail(new Error('NotValidUserId')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((user) => {
-      if (user) {
-        res.status(STATUS_CODES.OK).send({ data: user });
-      } else {
-        res
-          .status(STATUS_CODES.NOT_FOUND)
-          .send({ message: 'Пользователь не найден' });
-      }
+      res.status(STATUS_CODES.OK).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -52,6 +47,14 @@ const getUserById = (req, res) => {
           .status(STATUS_CODES.BAD_REQUEST)
           .send({
             message: 'Введены некорректные данные для поиска',
+            err: err.message,
+            stack: err.stack,
+          });
+      } else if (err.message === 'NotValidUserId') {
+        res
+          .status(STATUS_CODES.NOT_FOUND)
+          .send({
+            message: 'Пользователь не найден',
             err: err.message,
             stack: err.stack,
           });
@@ -67,14 +70,9 @@ const updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
 
   return User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+    .orFail(new Error('NotValidUserId')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((user) => {
-      if (user) {
-        res.status(STATUS_CODES.OK).send(user);
-      } else {
-        res
-          .status(STATUS_CODES.NOT_FOUND)
-          .send({ message: 'Пользователь не найден' });
-      }
+      res.status(STATUS_CODES.OK).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -82,6 +80,14 @@ const updateUserAvatar = (req, res) => {
           .status(STATUS_CODES.BAD_REQUEST)
           .send({
             message: 'Переданы некорректные данные при обновлении аватара',
+            err: err.message,
+            stack: err.stack,
+          });
+      } else if (err.message === 'NotValidUserId') {
+        res
+          .status(STATUS_CODES.NOT_FOUND)
+          .send({
+            message: 'Пользователь не найден',
             err: err.message,
             stack: err.stack,
           });
@@ -97,14 +103,9 @@ const updateUserProfile = (req, res) => {
   const { name, about } = req.body;
 
   return User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+    .orFail(new Error('NotValidUserId')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((user) => {
-      if (user) {
-        res.status(STATUS_CODES.OK).send(user);
-      } else {
-        res
-          .status(STATUS_CODES.NOT_FOUND)
-          .send({ message: 'Пользователь не найден' });
-      }
+      res.status(STATUS_CODES.OK).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -112,6 +113,14 @@ const updateUserProfile = (req, res) => {
           .status(STATUS_CODES.BAD_REQUEST)
           .send({
             message: 'Переданы некорректные данные при обновлении профиля',
+            err: err.message,
+            stack: err.stack,
+          });
+      } else if (err.message === 'NotValidUserId') {
+        res
+          .status(STATUS_CODES.NOT_FOUND)
+          .send({
+            message: 'Пользователь не найден',
             err: err.message,
             stack: err.stack,
           });

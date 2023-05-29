@@ -13,8 +13,6 @@ const getCards = (req, res) => {
 };
 
 const createCard = (req, res) => {
-  console.log(req.user._id);
-
   const { name, link } = req.body;
 
   return Card.create({ name, link, owner: req.user._id })
@@ -88,7 +86,7 @@ const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (!card) {
-        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Ошибка сервера' });
+        res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Карточка не найдена' });
         return;
       }
       res.status(STATUS_CODES.OK).send({ data: card });
