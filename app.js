@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 const express = require('express');
+const helmet = require('helmet'); // Установка: npm install --save helmet
 const { default: mongoose } = require('mongoose');
 const bodyParser = require('body-parser');
-const helmet = require('helmet'); // Установка: npm install --save helmet
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 const { STATUS_CODES } = require('./utils/constants');
