@@ -1,145 +1,81 @@
 /* eslint-disable no-console */
 const Card = require('../models/card');
 const { STATUS_CODES } = require('../utils/constants');
+const BadRequestError = require('../utils/errors/BadRequestError');
+const NotFoundError = require('../utils/errors/NotFoundError');
+const ForbiddenError = require('../utils/errors/ForbiddenError');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.status(STATUS_CODES.OK).send({ cards }))
-    .catch((err) => res.status(STATUS_CODES.SERVER_ERROR).send({
-      message: 'Ошибка сервера',
-      err: err.message,
-      stack: err.stack,
-    }));
+    .catch(next);
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
 
   return Card.create({ name, link, owner: req.user._id })
     .then((card) => res.status(STATUS_CODES.CREATED).send({ card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(STATUS_CODES.BAD_REQUEST).send({
-          message: 'Переданы некорректные данные при создании карточки',
-          err: err.message,
-          stack: err.stack,
-        });
-      } else {
-        res
-          .status(STATUS_CODES.SERVER_ERROR)
-          .send({
-            message: 'Ошибка сервера',
-            err: err.message,
-            stack: err.stack,
-          });
+        return next(new BadRequestError('Введены некорректные данные'));
       }
+      return next(err);
     });
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   )
-    .orFail(new Error('NotValidCardId')) // Если ошибка, сразу пробрасываем в блок Catch
+    .orFail(new NotFoundError('Карточка не найдена')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((card) => {
       res.status(STATUS_CODES.OK).send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(STATUS_CODES.BAD_REQUEST).send({
-          message: 'Переданы некорректные данные для постановки лайка',
-          err: err.message,
-          stack: err.stack,
-        });
-      } else if (err.message === 'NotValidCardId') {
-        res
-          .status(STATUS_CODES.NOT_FOUND)
-          .send({
-            message: 'Карточка не найдена',
-            err: err.message,
-            stack: err.stack,
-          });
-      } else {
-        res
-          .status(STATUS_CODES.SERVER_ERROR)
-          .send({
-            message: 'Ошибка сервера',
-            err: err.message,
-            stack: err.stack,
-          });
+        return next(new BadRequestError('Введены некорректные данные'));
       }
+      return next(err);
     });
 };
 
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   )
-    .orFail(new Error('NotValidCardId')) // Если ошибка, сразу пробрасываем в блок Catch
+    .orFail(new NotFoundError('Карточка не найдена')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((card) => {
       res.status(STATUS_CODES.OK).send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(STATUS_CODES.BAD_REQUEST).send({
-          message: 'Переданы некорректные данные для снятия лайка',
-          err: err.message,
-          stack: err.stack,
-        });
-      } else if (err.message === 'NotValidCardId') {
-        res
-          .status(STATUS_CODES.NOT_FOUND)
-          .send({
-            message: 'Карточка не найдена',
-            err: err.message,
-            stack: err.stack,
-          });
-      } else {
-        res
-          .status(STATUS_CODES.SERVER_ERROR)
-          .send({
-            message: 'Ошибка сервера',
-            err: err.message,
-            stack: err.stack,
-          });
+        return next(new BadRequestError('Введены некорректные данные'));
       }
+      return next(err);
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .orFail(new Error('NotValidCardId')) // Если ошибка, сразу пробрасываем в блок Catch
+    .orFail(new NotFoundError('Карточка не найдена'))
     .then((card) => {
-      res.status(STATUS_CODES.OK).send({ data: card });
+      if (card.owner.toString() !== req.user._id) {
+        throw new ForbiddenError('Нет прав на удаление карточки');
+      }
+      Card.findByIdAndRemove(req.params.cardId)
+        .then(() => res.send({ message: 'Карточка удалена' }))
+        .catch(next);
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(STATUS_CODES.BAD_REQUEST).send({
-          message: 'Карточка не найдена',
-          err: err.message,
-          stack: err.stack,
-        });
-      } else if (err.message === 'NotValidCardId') {
-        res
-          .status(STATUS_CODES.NOT_FOUND)
-          .send({
-            message: 'Карточка не найдена',
-            err: err.message,
-            stack: err.stack,
-          });
-      } else {
-        res
-          .status(STATUS_CODES.SERVER_ERROR)
-          .send({
-            message: 'Ошибка сервера',
-            err: err.message,
-            stack: err.stack,
-          });
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        return next(new BadRequestError('Введены некорректные данные'));
       }
+      return next(err);
     });
 };
 

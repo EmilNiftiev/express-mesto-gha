@@ -2,10 +2,14 @@
 const express = require('express');
 const helmet = require('helmet'); // Установка: npm install --save helmet
 const { default: mongoose } = require('mongoose');
+const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
-const { STATUS_CODES } = require('./utils/constants');
+const errorHandler = require('./middlewares/errorHandler');
+const { login, createUser } = require('./controllers/users');
+// const auth = require('./middlewares/auth');
+const NotFoundError = require('./utils/errors/NotFoundError');
 
 const { PORT = 3000, MONGO_URL = 'mongodb://127.0.0.1/mestodb' } = process.env;
 
@@ -22,18 +26,18 @@ mongoose.set({ runValidators: true });
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '6473529d41c875d94c20d456',
-  };
-  next();
-});
+app.post('/signin', login);
+app.post('/signup', createUser);
 
+// app.use(auth); // Все маршруты, расположенные ниже, защищены авторизацией
 app.use('/', userRouter);
 app.use('/', cardRouter);
-app.all('/*', (req, res) => {
-  res.status(STATUS_CODES.NOT_FOUND).send({ message: 'Такой страницы не существует' });
+app.all('/*', (req, res, next) => {
+  next(new NotFoundError('Такой страницы не существует'));
 });
+
+app.use(errors());
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

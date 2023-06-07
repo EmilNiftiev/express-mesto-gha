@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const validator = require('validator'); // Установка: npm install validator
-const { STATUS_CODES } = require('../utils/constants');
+const UnauthorizedError = require('../utils/errors/UnauthorizedError');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -35,25 +35,28 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    unique: true,
+    select: false, // По умолчанию хеш пароля пользователя не будет возвращаться из базы.
     required: [true, 'Поле "password" должно быть заполнено'],
   },
 }, { versionKey: false }); // Убираем отслеживание версии схемы ("__v" в объекте)
 
+// Код проверки логина и пароля делаем частью схемы userSchema.
+// Принимает два параментра и возвращает либо объект пользователя, либо ошибку
+
 userSchema.statics.findUserByCredentials = function (email, password) {
   return this.findOne({ email })
-    .select('+password')
+    .select('+password') // т.к. в случае аутентификации хеш пароля нужен
     .then((user) => {
       if (!user) {
         return Promise.reject(
-          new STATUS_CODES.UNAUTHORIZED('Неправильный email или пароль'),
+          new UnauthorizedError('Неправильный email или пароль'),
         );
       }
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
             return Promise.reject(
-              new STATUS_CODES.UNAUTHORIZED('Неправильный email или пароль'),
+              new UnauthorizedError('Неправильный email или пароль'),
             );
           }
           return user;
