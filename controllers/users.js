@@ -6,11 +6,13 @@ const NotFoundError = require('../utils/errors/NotFoundError');
 const BadRequestError = require('../utils/errors/BadRequestError');
 const ConflictError = require('../utils/errors/ConflictError');
 
+const { JWT_SECRET } = process.env;
+
 const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'secret-key', { expiresIn: '7d' });
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       res.send({ _id: token });
     })
     .catch(next);
@@ -25,7 +27,7 @@ const getUsers = (req, res, next) => {
 const getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail(() => {
-      throw new NotFoundError('Пользователь не найден');
+      throw new NotFoundError('Пользователь по указанному _id не найден');
     })
     .then((user) => res.send({ data: user }))
     .catch(next);
@@ -54,7 +56,7 @@ const createUser = (req, res, next) => {
         return next(new BadRequestError('Переданы некорректные данные при создании пользователя'));
       }
       if (err.code === 11000) {
-        return next(new ConflictError('Пользователь с таким email уже существует'));
+        return next(new ConflictError('При регистрации указан email, который уже существует на сервере'));
       }
       return next(err);
     });
@@ -62,13 +64,13 @@ const createUser = (req, res, next) => {
 
 const getUserById = (req, res, next) => {
   User.findById(req.params.userId)
-    .orFail(new NotFoundError('Пользователь не найден'))
+    .orFail(new NotFoundError('Пользователь по указанному _id не найден'))
     .then((user) => {
       res.status(STATUS_CODES.OK).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new BadRequestError('Введены некорректные данные поиска'));
+        return next(new BadRequestError('Переданы некорректные данные для поиска'));
       }
       return next(err);
     });
@@ -78,7 +80,7 @@ const updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   return User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
-    .orFail(new NotFoundError('Пользователь не найден')) // Если ошибка, сразу пробрасываем в блок Catch
+    .orFail(new NotFoundError('Пользователь с указанным _id не найден')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((user) => {
       res.status(STATUS_CODES.OK).send(user);
     })
@@ -94,7 +96,7 @@ const updateUserProfile = (req, res, next) => {
   const { name, about } = req.body;
 
   return User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
-    .orFail(new NotFoundError('Пользователь не найден')) // Если ошибка, сразу пробрасываем в блок Catch
+    .orFail(new NotFoundError('Пользователь с указанным _id не найден')) // Если ошибка, сразу пробрасываем в блок Catch
     .then((user) => {
       res.status(STATUS_CODES.OK).send(user);
     })
