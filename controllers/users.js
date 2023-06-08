@@ -1,12 +1,12 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
-const { STATUS_CODES, JWT_SECRET } = require('../utils/constants');
+const { STATUS_CODES } = require('../utils/constants');
 const NotFoundError = require('../utils/errors/NotFoundError');
 const BadRequestError = require('../utils/errors/BadRequestError');
 const ConflictError = require('../utils/errors/ConflictError');
 
-// const { JWT_SECRET } = process.env; Пробовал делать так, test endpoints завершался с ошибкой
+const { JWT_SECRET } = process.env; // Пробовал делать так, test endpoints завершался с ошибкой
 
 const login = (req, res, next) => {
   const { email, password } = req.body;

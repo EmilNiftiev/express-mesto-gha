@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-// require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet'); // Установка: npm install --save helmet
 const { default: mongoose } = require('mongoose');
