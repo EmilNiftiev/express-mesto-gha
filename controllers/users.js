@@ -6,13 +6,13 @@ const NotFoundError = require('../utils/errors/NotFoundError');
 const BadRequestError = require('../utils/errors/BadRequestError');
 const ConflictError = require('../utils/errors/ConflictError');
 
-const { JWT_SECRET } = process.env;
+// const { JWT_SECRET } = process.env;
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ _id: user._id }, 'JWT_SECRET', { expiresIn: '7d' });
       res.send({ _id: token });
     })
     .catch(next);
