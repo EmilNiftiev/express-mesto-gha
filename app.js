@@ -7,8 +7,9 @@ const bodyParser = require('body-parser');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 const errorHandler = require('./middlewares/errorHandler');
+const { signinValidator, signupValidator } = require('./middlewares/validation');
 const { login, createUser } = require('./controllers/users');
-// const auth = require('./middlewares/auth');
+const auth = require('./middlewares/auth');
 const NotFoundError = require('./utils/errors/NotFoundError');
 
 const { PORT = 3000, MONGO_URL = 'mongodb://127.0.0.1/mestodb' } = process.env;
@@ -26,18 +27,18 @@ mongoose.set({ runValidators: true });
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', signinValidator, login);
+app.post('/signup', signupValidator, createUser);
 
-// app.use(auth); // Все маршруты, расположенные ниже, защищены авторизацией
+app.use(auth); // Все маршруты, расположенные ниже, защищены авторизацией
 app.use('/', userRouter);
 app.use('/', cardRouter);
 app.all('/*', (req, res, next) => {
   next(new NotFoundError('Такой страницы не существует'));
 });
 
-app.use(errors());
-app.use(errorHandler);
+app.use(errors()); // Миддлвэр errors, чтобы отправить клиенту ошибку
+app.use(errorHandler); // Наш централизованный обработчик ошибок
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
