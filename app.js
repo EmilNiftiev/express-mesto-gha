@@ -13,7 +13,7 @@ const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const NotFoundError = require('./utils/errors/NotFoundError');
 
-const { PORT = 3000, MONGO_URL = 'mongodb://127.0.0.1/mestodb' } = process.env;
+const { PORT = 3000, MONGO_URL = 'mongodb://localhost/mestodb' } = process.env; // 127.0.0.1
 
 const app = express();
 app.use(helmet()); // Набор middleware-функций для защиты от веб-уязвимостей
